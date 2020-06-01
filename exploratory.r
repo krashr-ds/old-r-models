@@ -58,11 +58,10 @@ fr_ex <- fr_ex %>% mutate(EVENT = recode(EVENT,
 
 # Code BMI groups
 
-fr_ex <- fr_ex %>% mutate(BMIGROUP=cut(BMI, breaks=c(0, 18.5, 25, 30, 40, Inf), labels=c("Underweight", 
+fr_ex <- fr_ex %>% mutate(BMIGROUP=cut(BMI, breaks=c(0, 18.5, 25, 30, Inf), labels=c("Underweight", 
                                                                                          "Normal", 
                                                                                          "Overweight", 
-                                                                                         "Obese", 
-                                                                                         "Morbidly Obese")))
+                                                                                         "Obese+")))
 
 # Code HTN clinical groups
 # Diastolic first, since most people with high diastolic pressure also have high systolic pressure.
@@ -135,9 +134,9 @@ ggplot(frs, aes(x = CPD, y = MEAN_DAYS)) +
 # Separate into periods
 fr_p1 <- fr_ex %>% filter(PERIOD == 1) %>% select(RANDID, TIME, AGE, SEXGROUP, HTNGROUP, HYPERTEN, BPMEDS, BMIGROUP, CURSMOKE, CIGPDAY, DIAGNOSIS, HAS_DIAGNOSIS, FLAG, FLAG_VAL, EVENT, DAYS_TO_EVENT, TIMEDTH) 
 fr_p2 <- fr_ex %>% filter(PERIOD == 2) %>% select(RANDID, TIME, AGE, SEXGROUP, HTNGROUP, HYPERTEN, BPMEDS, BMIGROUP, CURSMOKE, CIGPDAY, DIAGNOSIS, HAS_DIAGNOSIS, FLAG, FLAG_VAL, EVENT, DAYS_TO_EVENT, TIMEDTH) 
-fr_p3 <- fr_ex %>% filter(PERIOD == 3) %>% select(RANDID, TIME, AGE, SEXGROUP, HTNGROUP, HYPERTEN, BPMEDS, BMIGROUP, CURSMOKE, CIGPDAY, DIAGNOSIS, HAS_DIAGNOSIS, FLAG, FLAG_VAL, EVENT, DAYS_TO_EVENT, TIMEDTH, HDLC, LDLC) 
+fr_p3 <- fr_ex %>% filter(PERIOD == 3) %>% select(RANDID, TIME, AGE, SEXGROUP, HTNGROUP, HYPERTEN, BPMEDS, BMIGROUP, GLUCOSE, CURSMOKE, CIGPDAY, DIAGNOSIS, HAS_DIAGNOSIS, FLAG, FLAG_VAL, EVENT, DAYS_TO_EVENT, TIMEDTH, TOTCHOL, HDLC, LDLC) 
 
-# Period 1: 705948, Period 2: 653063, Period 3: 685277
+# Period 1: 616704, Period 2: 570335, Period 3: 598301 rows 
 
 # Strongest Correlation: Diagnoses & Events
 # Let's explore this in more detail among the PERIODs
@@ -318,7 +317,7 @@ ggplot(fr_p2f, aes(x = CIGPDAY, y = AGE, color=DIAGNOSIS)) +
 
 #####################
 # PERIOD 3
-fr_p3 <- fr_p3 %>% filter(BPMEDS %in% c(0,1))
+fr_p3 <- fr_p3 %>% filter(BPMEDS %in% c(0,1) & !is.na(BMIGROUP))
 
 # No Diagnoses v. Events by Age, Sex, BMI
 # Males
@@ -403,6 +402,34 @@ ggplot(fr_p3f, aes(x = CIGPDAY, y = AGE, color=DIAGNOSIS)) +
   geom_smooth(method = "lm") + 
   labs(title = "P3 Age @ Diagnosis x Cigarettes per Day", x = "Cigarettes per Day", y = "Age")
 
-###########
-# Phase 2 - Plotting on the insights
+#
+# ADDITIONAL FOR PERIOD 3
+#
+
+# Time to Hypertension Explained by Glucose Level, BMI Group
+fr_p3xx <- fr_p3 %>% filter(EVENT=="Hypertension" & !is.na(GLUCOSE))
+ggplot(fr_p3xx, aes(x = GLUCOSE, y = DAYS_TO_EVENT, color = BMIGROUP)) + 
+  geom_point(position = "jitter", alpha=0.4) + 
+  geom_smooth(method = "lm") + 
+  labs(title = "Time to Hypertension Explained by Glucose level, BMI.", x = "Random Glucose mg/dl", y = "Days to Hypertension")
+
+# Time to Hypertension Explained by Age, BMI Group
+ggplot(fr_p3xx, aes(x = AGE, y = DAYS_TO_EVENT, color = BMIGROUP)) + 
+  geom_point(position = "jitter", alpha=0.4) + 
+  geom_smooth(method = "lm") + 
+  labs(title = "Time to Hypertension Explained by Age, BMI.", x = "Age", y = "Days to Hypertension")
+
+# Influence of Cholesterol (TOTCHOL graph was not significant, so removed.)
+fr_pxxx <- fr_p3 %>% filter(!is.na(LDLC) & !is.na(HDLC))
+ggplot(fr_pxxx, aes(x = LDLC, y = DAYS_TO_EVENT, color=EVENT)) + 
+  geom_point(position = "jitter", alpha=0.4) +
+  geom_smooth(method = "lm") +
+  labs(title = "Time to Event Explained by LDLC", x = "LDLC", y = "Days to Event")
+
+ggplot(fr_pxxx, aes(x = HDLC, y = DAYS_TO_EVENT, color=EVENT)) + 
+  geom_point(position = "jitter", alpha=0.4) +
+  geom_smooth(method = "lm") +
+  labs(title = "Time to Event Explained by HDLC", x = "HDLC", y = "Days to Event")
+
+
 
