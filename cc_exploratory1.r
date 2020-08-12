@@ -97,7 +97,7 @@ cc <- cc %>% mutate(TOTAL_AVE_NUM_SCRIPTS_PER_BENE = as.numeric(as.character(AVE
 
 cc <- cc %>% mutate(TOTAL_AVE_COSTS = TOTAL_AVE_REIMB_PA + TOTAL_AVE_REIMB_PB)
 
-# FLATTENED, CATEGORIZED DATA: 242033 rows and 67 cols #
+# FLATTENED, CATEGORIZED DATA: 242033 rows and 68 cols #
 ########################################################
 
 # CONSTANT ASSIGNMENT
